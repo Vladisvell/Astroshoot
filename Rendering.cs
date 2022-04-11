@@ -15,84 +15,167 @@ namespace Astroshooter
     public partial class SpaceField : Form
     {
         Ship ship;
-        Image ShipTexture;
-        Image background;
-        Vector shipCords;
-        double rotation = 10;
+        static Image ShipTexture;
+        static Vector shipCords;
+        float angle = 0;
+        private Controller controller;
+        Point mousecords;
+
+        private List<Asteroid> asteroids;
+        private List<SpaceObject> spaceObjects;
+
+        private Label velocity;
+        private Label acceleration;
+        private Label thrustforce;
+        private Label direction;
+
+        System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
 
         public SpaceField()
         {
             InitializeComponent();
-            //this.BackColor = Color.Black;
-            this.Name = "Asteroids";
-            this.background = new Bitmap(ClientSize.Width, ClientSize.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            ship = new Ship(new Vector(200,200));
-            
+            ship = new Ship(new Vector(ClientSize.Width / 2 ,ClientSize.Height / 2));
+            shipCords = ship.Location;
+
+            asteroids = new List<Asteroid>();
+            asteroids.Add(new Asteroid(new Vector(100, 100), new Vector(0.001, 0.001)));
+
+            spaceObjects = new List<SpaceObject>();
+            spaceObjects.Add(new Asteroid(new Vector(100, 100), new Vector(0.001, 0.001)));
+
+            controller = new Controller(ship, this, spaceObjects);
+
+
             ShipTexture = ship.ShipTexture;
         }
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnLoad(EventArgs e)
         {
+            base.OnLoad(e);
+            Text = "Astroshooter";
+            DoubleBuffered = true;
             
+            BackColor = Color.Black;
+            InitializeTimer();
+            InitializeLabels();
+        }
 
-            Bitmap bmp = new Bitmap(ShipTexture.Width, ShipTexture.Height);
+        public void InitializeLabels()
+        {
+            velocity = new Label
+            {
+                Location = new Point(0, 10),
+                Size = new Size(100, 15),
+                Text = "Velocity = ",
+                ForeColor = Color.White,     
+            };
+            acceleration = new Label
+            {
+                Location = new Point(0, 70),
+                Size = new Size(100, 15),
+                Text = "Acceleration = ",
+                ForeColor = Color.White,
+                BackColor = Color.Transparent
+            };
+            thrustforce = new Label
+            {
+                Location = new Point(0, 130),
+                Size = new Size(100, 15),
+                Text = "Acceleration = ",
+                ForeColor = Color.White,
+                BackColor = Color.Transparent
+            };
+            direction = new Label
+            {
+                Location = new Point(0, 190),
+                Size = new Size(130, 15),
+                Text = "Direction = ",
+                ForeColor = Color.White,
+                BackColor = Color.Transparent
+            };
 
-            base.OnPaint(e);
+            Controls.Add(velocity);
+            Controls.Add(acceleration);
+            Controls.Add(thrustforce);
+            Controls.Add(direction);
 
-            var shipImage = RotateImage(ShipTexture, 90);
-            //ShipTexture = shipImage;
+        }
 
-            //e.Graphics.DrawImage(shipImage, 100, 100);
-            shipCords = ship.GetCurrentCoordinates();
-            var timer = new System.Windows.Forms.Timer();
-            e.Graphics.DrawImage(shipImage, (float)shipCords.X, (float)shipCords.Y);
-            timer.Tick += (sender, args) => Invalidate();
-            timer.Interval = 1000;
+        public void InitializeTimer()
+        {
+            timer.Interval = 10;
+            timer.Tick += (sender, args) => Invalidate(sender, args);
+            timer.Tick += (sender, args) => ship.SimulateTimeFrame(timer.Interval);
+            timer.Tick += (sender, args) => controller.UpdateSimulation(timer.Interval);
+            timer.Tick += (sender, args) => MovementDataTick();
             timer.Start();
         }
 
-        private void Transform(Graphics g)
+        public void MovementDataTick()
         {
-
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.FillRectangle(Brushes.Black, ClientRectangle);
-
-            g.TranslateTransform((float)shipCords.X, (float)shipCords.Y);
-            g.RotateTransform(90 + (float)(ship.Direction * 180 / Math.PI));
+            var vel = ship.GetVelocity();
+            var thrust = ship.GetThrustForce();
+            var accel = ship.GetAcceleration();
+            velocity.Text = "Velocity = " + Math.Round(Math.Sqrt(vel.X * vel.X + vel.Y * vel.Y), 5).ToString();
+            thrustforce.Text = "Thrust = " + thrust.ToString();
+            acceleration.Text = "Acceleration = " + Math.Sqrt(accel.X * accel.X + accel.Y * accel.Y);
+            direction.Text = "Direction = " + ship.Direction.ToString();
         }
 
-        public static Image RotateImage(Image img, float rotationAngle)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
-            //create an empty Bitmap image
-            Bitmap bmp = new Bitmap(img.Width, img.Height);
+            base.OnKeyDown(e);
+            if (e.KeyCode == Keys.W)
+            {
+                ship.ApplyForce();
+            }
+            if (e.KeyCode == Keys.R)
+                BackColor = Color.Black;
+        }
+            
 
-            bmp.SetResolution(img.HorizontalResolution, img.VerticalResolution);
-            //turn the Bitmap into a Graphics object
-            Graphics gfx = Graphics.FromImage(bmp);
+        void Invalidate(object sender, EventArgs e) {this.Invalidate(); this.Update(); }
 
-            //now we set the rotation point to the center of our image
-            gfx.TranslateTransform((float)bmp.Width / 2, (float)bmp.Height / 2);
 
-            //now rotate the image
-            gfx.RotateTransform(rotationAngle);
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            shipCords = ship.GetCurrentCoordinates();
+            Graphics g = this.CreateGraphics();
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TranslateTransform((float)shipCords.X,
+                (float)shipCords.Y);             
+            g.RotateTransform(angle);
+            ship.ChangeDirection(angle);
+            g.DrawImage(ShipTexture, new Point(-ShipTexture.Width / 2, -ShipTexture.Height / 2));
+            e.Graphics.DrawLine(Pens.Red, new PointF((float)shipCords.X, (float)shipCords.Y), mousecords);
+            RenderAsteroids(e);
+        }
 
-            gfx.TranslateTransform(-(float)bmp.Width / 2, -(float)bmp.Height / 2);
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            mousecords = e.Location;
+            RotateImageAngle(e);
+        }
 
-            //set the InterpolationMode to HighQualityBicubic so to ensure a high
-            //quality image once it is transformed to the specified size
-            //gfx.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-            gfx.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            gfx.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            //now draw our new image onto the graphics object
-            gfx.DrawImage(img, new Point(0, 0));
+        public float RotateImageAngle(MouseEventArgs e)
+        {
+            var y2 = e.Y;
+            var y1 = shipCords.Y + ShipTexture.Height / 2;
+            var x2 = e.X;
+            var x1 = shipCords.X + ShipTexture.Width / 2;         
+            angle = (float)(Math.Atan2((y1 - y2), (x1 - x2)) * 180 / Math.PI);
+            return 0;
+        }
 
-            //dispose of our Graphics object
-            gfx.Dispose();
-
-            //return the image
-            return bmp;
+        void RenderAsteroids(PaintEventArgs e)
+        {
+            foreach (var asteroid in asteroids)
+                e.Graphics.DrawImage(asteroid.texture, new PointF((float)asteroid.Location.X, (float)asteroid.Location.Y));
         }
 
 
+        
     }
 }
