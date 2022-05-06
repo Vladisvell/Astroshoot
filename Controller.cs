@@ -12,6 +12,7 @@ namespace Astroshooter
         private Ship ship;
         private SpaceField spacefield;
         private List<SpaceObject> spaceObjects;
+        private List<int> toDelete = new List<int>(512);
 
         public Controller(Ship ship, SpaceField spacefield, List<SpaceObject> spaceObjects)
         {
@@ -20,45 +21,73 @@ namespace Astroshooter
             this.spaceObjects = spaceObjects;
         }
 
-        private bool InBounds()
+        private void BoundaryCollisionHandle(SpaceObject obj)
         {
-            return ship.Location.X < spacefield.Width
-                && ship.Location.X > 0
-                && ship.Location.Y > 0
-                && ship.Location.Y < spacefield.Height;
+            var Location = obj.GetCoordinates();
+
+            if (Location.X < -32) obj.SetCurrentCoordinates(spacefield.Width, Location.Y);
+            if (Location.X > spacefield.Width + 32) obj.SetCurrentCoordinates(0, Location.Y);
+            if (Location.Y < -32) obj.SetCurrentCoordinates(ship.Location.X, spacefield.Height);
+            if (Location.Y > spacefield.Height + 32) obj.SetCurrentCoordinates(Location.X, -16);
         }
 
-        private void BoundaryCollisionHandle()
+        void Collision(SpaceObject spaceobject)
         {
-            if (ship.Location.X < -32) ship.SetCurrentCoordinates(spacefield.Width, ship.Location.Y);
-            if (ship.Location.X > spacefield.Width+32) ship.SetCurrentCoordinates(0, ship.Location.Y);
-            if (ship.Location.Y < -32) ship.SetCurrentCoordinates(ship.Location.X, spacefield.Height);
-            if (ship.Location.Y > spacefield.Height+32) ship.SetCurrentCoordinates(ship.Location.X, 0);
-        }
-
-        void Collisions()
-        {
-            foreach (var spaceObject in spaceObjects)
-                CollisionCheck(ship, spaceObject);
+            for(int i = 0; i < spaceObjects.Count; i++)
+            {
+                if(spaceobject != null && spaceObjects[i] != null)
+                {
+                    if (spaceobject != spaceObjects[i])
+                        CollisionCheck(spaceObjects[i], spaceobject);
+                    CollisionCheck(spaceObjects[i], ship);
+                }
+            }
         }
 
         public void CollisionCheck(SpaceObject left, SpaceObject right)
         {
-            if (left.IsCollided(right))
+            if (left.IsCollided(right) && (left is Ship || right is Ship))
                 spacefield.BackColor = System.Drawing.Color.Green;
+            if (left.IsCollided(right))
+            {
+                if(left is Asteroid)
+                {
+                    var leftaster = left as Asteroid;
+                    leftaster.Collide(right);
+                }
+            }           
         }
 
         void SimulateSpaceObjectsTimeFrame(double dt)
         {
-            foreach (var spaceObject in spaceObjects)
-                spaceObject.SimulateTimeFrame(dt);
+            BoundaryCollisionHandle(ship);
+
+            for(int i = 0; i < spaceObjects.Count; i++)
+            {
+                if(spaceObjects[i] != null)
+                {
+                    spaceObjects[i].SimulateTimeFrame(dt);
+                    BoundaryCollisionHandle(spaceObjects[i]);
+                    Collision(spaceObjects[i]);
+                    if (spaceObjects[i].IsDead())
+                        toDelete.Add(i);
+                }
+            }
+            for(int i = 0; i < toDelete.Count; i++)
+            {
+                if(toDelete[i] != -1)
+                {
+                    spaceObjects[toDelete[i]] = spaceObjects[spaceObjects.Count - 1];
+                    spaceObjects.RemoveAt(spaceObjects.Count - 1);
+                }
+                toDelete[i] = -1;
+            }       
+            toDelete.Clear();
         }
 
         public void UpdateSimulation(double dt)
         {
-            SimulateSpaceObjectsTimeFrame(dt);
-            if (!InBounds()) BoundaryCollisionHandle();
-            Collisions();
+            SimulateSpaceObjectsTimeFrame(dt);              
         }
     }
 }

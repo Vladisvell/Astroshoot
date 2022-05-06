@@ -10,51 +10,104 @@ namespace Astroshooter
     class Asteroid : SpaceObject
     {
         public Image texture { get; private set; }
-        public Vector Location { get; private set; }
+        public Vec2 Location { get; private set; }
 
-        public Vector Velocity { get; private set; }
+        public Vec2 Velocity { get; private set; }
 
-        public Asteroid(Vector spawn, Vector velocity)
+        bool isDead;
+
+        public double mass = 1;
+
+        public double MovingAngle 
+        { 
+            get 
+            {
+                return Math.Atan2(Velocity.Y, Velocity.X);      
+            } 
+            private set { }
+        }
+
+        private double cooldown = 0;
+
+        public Asteroid(Vec2 spawn, Vec2 velocity, double mass = 1)
         {
             InitializeImage();
             Location = spawn;
             Velocity = velocity;
+            this.mass = mass;
         }
         void InitializeImage()
         {
             texture = Image.FromFile("textures/asteroid/asteroid.png");
+            //texture = Image.FromFile("textures/ship/ship.bmp");
         }
 
         public void SimulateTimeFrame(double dt)
         {
             UpdatePosition(dt);
+            UpdateCooldown(dt);
         }
 
+        private void UpdateCooldown(double dt)
+        {
+            if(cooldown > 0)
+                cooldown -= dt;
+            if (cooldown < 0)
+                cooldown = 0;
+        }
         private void UpdatePosition(double dt)
         {
             Location.X += Velocity.X * dt;
             Location.Y += Velocity.Y * dt;
         }
 
-        public Vector GetCoordinates() => Location;
+        public Vec2 GetCoordinates() => Location;
 
         public bool IsCollided(SpaceObject spaceObject)
-        {
+        {         
             var objCords = spaceObject.GetCoordinates();
             var objSize = spaceObject.GetSize();
+            var objRad = objSize.Width / 2;
+            var thisRad = texture.Size.Width / 2;
             if (
-                    this.Location.X - texture.Width / 2 < objCords.X - objSize.Width / 2 + objSize.Width
-                    && this.Location.X - texture.Width / 2 + texture.Width > objCords.X - objSize.Width / 2
-                    && this.Location.Y - texture.Height / 2 < objCords.Y - objSize.Height / 2 + objSize.Height
-                    && this.Location.Y + texture.Height / 2 > objCords.Y - objSize.Height / 2
+                    this.Location.X < objCords.X + objSize.Width
+                    && this.Location.X + texture.Width > objCords.X
+                    && this.Location.Y < objCords.Y + objSize.Height
+                    && this.Location.Y + texture.Height > objCords.Y
                 )
                 return true;
             return false;
         }
 
-        public Size GetSize()
+        public void Collide(SpaceObject spaceObject)
         {
-            return texture.Size;
+            if (spaceObject is Asteroid && cooldown <= 0)
+            {
+                var pointer = spaceObject as Asteroid;
+                
+                {
+
+                    var newPointerVel = (pointer.Velocity * (pointer.mass - mass) + Velocity * 2 * mass) * (1 / (mass + pointer.mass));
+                    var newVel = (Velocity * (mass - pointer.mass) + pointer.Velocity * 2 * pointer.mass) * (1 / (mass + pointer.mass));
+
+                    pointer.Velocity = newPointerVel;
+                    Velocity = newVel;
+                    cooldown = 420;
+                    pointer.cooldown = 420;
+                }
+            }
+            if (spaceObject is Ship)
+            {
+                isDead = true;
+            }
         }
+
+        public Size GetSize() => texture.Size;
+
+        public void SetCurrentCoordinates(double x, double y) => Location = new Vec2(x, y);
+
+        public Image GetImage() => texture;
+
+        public bool IsDead() => isDead;
     }
 }

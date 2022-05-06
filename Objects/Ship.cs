@@ -11,28 +11,34 @@ namespace Astroshooter
     class Ship : SpaceObject
     {
         public readonly Image ShipTexture;
-        public Vector Location { get; private set; }
-        
-        private Vector velocity = new Vector();
+        public Vec2 Location { get; private set; }
+
+        private Vec2 velocity = new Vec2();
         private double thrustForce = 0;
-        private Vector ResistanceForce = new Vector();
-        private Vector acceleration = new Vector();
+        private Vec2 ResistanceForce = new Vec2();
+        private Vec2 acceleration = new Vec2();
         private double mass = 2;
         private double inertia = 0.001;
+        bool isDead;
+        public double cooldown {get; private set;}
+
+        public void SetShootCooldown(double setted) => cooldown = setted;
 
         public float Direction { get; private set; }
 
+        private void UpdateCooldown(double dt) => cooldown -= dt;
+
         public Image GetTexture() => ShipTexture;
 
-        public Vector GetCurrentCoordinates() => Location;
+        public Vec2 GetCurrentCoordinates() => Location;
 
-        public Vector GetAcceleration() => acceleration;
+        public Vec2 GetAcceleration() => acceleration;
 
         public double GetThrustForce() => thrustForce;
 
         public void SetThrustForce(double newForce) => thrustForce = newForce; 
 
-        public Vector GetVelocity() => velocity;
+        public Vec2 GetVelocity() => velocity;
 
         public void SetCurrentCoordinates(double x, double y)
         {
@@ -73,6 +79,7 @@ namespace Astroshooter
             UpdateResistance();
             UpdatePosition(dt);
             DeapplyForce();
+            UpdateCooldown(dt);
             
         }
 
@@ -88,7 +95,7 @@ namespace Astroshooter
         {
             if (thrustForce > 0)
             {
-                thrustForce -= thrustForce / 10;
+                thrustForce -= thrustForce / 5;
                 thrustForce = Math.Round(thrustForce, 7);
             }
                 
@@ -101,12 +108,14 @@ namespace Astroshooter
             }         
         }
 
-        public Vector GetCoordinates() => Location;
+        public Vec2 GetCoordinates() => Location;
 
         public bool IsCollided(SpaceObject spaceObject)
         {
             var objCords = spaceObject.GetCoordinates();
             var objSize = spaceObject.GetSize();
+            var objRad = objSize.Width * Math.Sqrt(2);
+            var thisRad = ShipTexture.Size.Width * Math.Sqrt(2);
             if (
                     this.Location.X < objCords.X + objSize.Width
                     && this.Location.X + ShipTexture.Width > objCords.X
@@ -119,10 +128,17 @@ namespace Astroshooter
 
         public Size GetSize() => ShipTexture.Size;
 
-        public Ship(Vector spawnPoint)
+        public Image GetImage()
+        {
+            return ShipTexture;
+        }
+
+        public bool IsDead() => isDead;
+
+        public Ship(Vec2 spawnPoint)
         {
             ShipTexture = Image.FromFile("textures/ship/ship.bmp");
-            Location = new Vector(spawnPoint.X, spawnPoint.Y);
+            Location = new Vec2(spawnPoint.X, spawnPoint.Y);
         }
 
     }
