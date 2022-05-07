@@ -31,6 +31,7 @@ namespace Astroshooter
 
         private bool isSpacePressed;
         private bool isWPressed;
+        private bool isRPressed;
 
         private Label velocity;
         private Label acceleration;
@@ -149,42 +150,20 @@ namespace Astroshooter
             }
             if (isWPressed)
                 ship.ApplyForce();
+            if (isRPressed)
+                BackColor = Color.Black;
 
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
-            //pressedKeys.Enqueue(e.KeyCode);
             if (e.KeyCode == Keys.Space)
                 isSpacePressed = true;
             if (e.KeyCode == Keys.W)
                 isWPressed = true;
-            //if (e.KeyCode == Keys.W || e.KeyCode == Keys.Space)
-            //{
-            //    ship.ApplyForce();
-            //    if (ship.cooldown <= 0)
-            //    {
-            //        spaceObjects.Add(new Bullet(ship.GetCurrentCoordinates(), ship.GetVelocity() + new Vec2(1, 1) * angle * (1 / 180)));
-            //        ship.SetShootCooldown(300);
-            //    }
-            //}
-            //if (e.KeyCode == Keys.W)
-            //{
-            //    ship.ApplyForce();
-            //}
-            //if (e.KeyCode == Keys.R)
-            //    BackColor = Color.Black;
-            //if (e.KeyCode == Keys.Space)
-            //{
-
-            //    if (ship.cooldown <= 0)
-            //    {
-            //        spaceObjects.Add(new Bullet(ship.GetCurrentCoordinates(), ship.GetVelocity() + new Vec2(1, 1) * angle * (1 / 180)));
-            //        ship.SetShootCooldown(300);
-            //    }
-            ////TODO: физика пеллет
-            //}
+            if (e.KeyCode == Keys.R)
+                isRPressed = true;
         }
         protected override void OnKeyUp(KeyEventArgs e)
         {
@@ -193,6 +172,8 @@ namespace Astroshooter
                 isSpacePressed = false;
             if (e.KeyCode == Keys.W)
                 isWPressed = false;
+            if (e.KeyCode == Keys.R)
+                isRPressed = false;
         }
 
         void Invalidate(object sender, EventArgs e) {this.Invalidate();  }
