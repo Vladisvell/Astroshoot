@@ -29,18 +29,16 @@ namespace Astroshooter
 
         private double cooldown = 0;
 
-        public Asteroid(Vec2 spawn, Vec2 velocity, double mass = 1)
+        public Asteroid(Vec2 spawn, Vec2 velocity, Image texture = null)
         {
-            InitializeImage();
+            if (texture == null)
+                texture = Image.FromFile("textures/asteroid/asteroid_1.png");
+            else
+                this.texture = texture;
             Location = spawn;
             Velocity = velocity;
-            this.mass = mass;
         }
-        void InitializeImage()
-        {
-            texture = Image.FromFile("textures/asteroid/asteroid.png");
-            //texture = Image.FromFile("textures/ship/ship.bmp");
-        }
+
 
         public void SimulateTimeFrame(double dt)
         {

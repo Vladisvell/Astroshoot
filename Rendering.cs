@@ -7,9 +7,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows;
 using System.Timers;
 using System.Drawing.Drawing2D;
 using System.Windows.Input;
+using System.IO;
+
 
 namespace Astroshooter
 {
@@ -25,10 +28,6 @@ namespace Astroshooter
         private List<Asteroid> asteroids;
         private List<SpaceObject> spaceObjects;
 
-        // private List<Keys> pressedKeys = new List<Keys>(32);
-
-        private Queue<Keys> pressedKeys = new Queue<Keys>();
-
         private bool isSpacePressed;
         private bool isWPressed;
         private bool isRPressed;
@@ -38,25 +37,28 @@ namespace Astroshooter
         private Label thrustforce;
         private Label direction;
 
+        List<Image> asteroidTextures;
+
+        Random random;
 
         System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
 
         public SpaceField()
         {
             InitializeComponent();
+            asteroidTextures = InitializeAsteroidImages();
             ship = new Ship(new Vec2(ClientSize.Width / 2 ,ClientSize.Height / 2));
             shipCords = ship.Location;
 
-            //asteroids = new List<Asteroid>();
-            //asteroids.Add(new Asteroid(new Vector(100, 100), new Vector(0.001, 0.001)));
-            
+            random = new Random();
 
             spaceObjects = new List<SpaceObject>(512);
-            spaceObjects.Add(new Asteroid(new Vec2(100, 100), new Vec2(-0.1, 0.0)));
-            spaceObjects.Add(new Asteroid(new Vec2(200, 100), new Vec2(0.1, 0.0)));
-            spaceObjects.Add(new Asteroid(new Vec2(300, 100), new Vec2(0.0, 0.1)));
-            spaceObjects.Add(new Asteroid(new Vec2(300, 200), new Vec2(0.1, 0.1)));
-            spaceObjects.Add(new Asteroid(new Vec2(300, 300), new Vec2(-0.1, -0.1)));
+
+            spaceObjects.Add(new Asteroid(new Vec2(100, 100), new Vec2(-0.1, 0.0), asteroidTextures[random.Next(0, asteroidTextures.Count-1)]));
+            spaceObjects.Add(new Asteroid(new Vec2(200, 100), new Vec2(0.1, 0.0), asteroidTextures[random.Next(0, asteroidTextures.Count - 1)]));
+            spaceObjects.Add(new Asteroid(new Vec2(300, 100), new Vec2(0.0, 0.1), asteroidTextures[random.Next(0, asteroidTextures.Count - 1)]));
+            spaceObjects.Add(new Asteroid(new Vec2(300, 200), new Vec2(0.1, 0.1), asteroidTextures[random.Next(0, asteroidTextures.Count - 1)]));
+            spaceObjects.Add(new Asteroid(new Vec2(300, 300), new Vec2(-0.1, -0.1), asteroidTextures[random.Next(0, asteroidTextures.Count - 1)]));
 
             controller = new Controller(ship, this, spaceObjects);
 
@@ -116,6 +118,16 @@ namespace Astroshooter
 
         }
 
+        public List<Image> InitializeAsteroidImages()
+        {
+            string asteroidDirectoryPath = @".\textures\asteroid";
+            string directory = Directory.GetCurrentDirectory();
+            var files = Directory.EnumerateFiles(asteroidDirectoryPath, "*.png", SearchOption.AllDirectories);
+            var ech = files.ToList();
+            var imageList = files.Select(x => Image.FromFile(x)).ToList();
+            return imageList;
+        }
+
         public void InitializeTimer()
         {
             timer.Interval = 10;
@@ -144,7 +156,10 @@ namespace Astroshooter
             {
                 if (ship.cooldown <= 0)
                 {
-                    spaceObjects.Add(new Bullet(ship.GetCurrentCoordinates(), ship.GetVelocity())); //пока это торпеда
+                    var pelleteVelocity = new Vec2();
+                    pelleteVelocity.X = -Math.Cos(angle / 180 * Math.PI);
+                    pelleteVelocity.Y = -Math.Sin(angle / 180 * Math.PI);
+                    spaceObjects.Add(new Bullet(ship.GetCurrentCoordinates(), pelleteVelocity)); //пока это торпеда
                     ship.SetShootCooldown(300);
                 }
             }
