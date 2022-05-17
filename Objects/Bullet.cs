@@ -39,8 +39,17 @@ namespace Astroshooter
                     && this.location.Y < objCords.Y + objSize.Height
                     && this.location.Y + texture.Height > objCords.Y
                 )
-                return true;
-            return false;
+            {
+                if (spaceObject is Ship)
+                    return false;
+                if (spaceObject is Asteroid)
+                {
+                    isDead = true;
+                    return true;
+                }
+                    
+            }
+                return false;
         }
 
         public void SetCurrentCoordinates(double x, double y)

@@ -22,10 +22,9 @@ namespace Astroshooter
             Y = y;
         }
 
-        static public PointF TransformToPointF(Vec2 vector)
-        {
-            return new PointF((float)vector.X, (float)vector.Y);
-        }
+        static public PointF TransformToPointF(Vec2 vector) => new PointF((float)vector.X, (float)vector.Y);
+
+        static public Point TransformToPoint(Vec2 vector) => new Point((int)vector.X, (int)vector.Y);
 
         static public double GetDistanceBetween(Vec2 left, Vec2 right)
         {

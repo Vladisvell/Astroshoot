@@ -9,6 +9,8 @@ namespace Astroshooter
 {
     class Asteroid : SpaceObject
     {
+        Random rand;
+
         public Image texture { get; private set; }
         public Vec2 Location { get; private set; }
 
@@ -31,10 +33,13 @@ namespace Astroshooter
 
         public Asteroid(Vec2 spawn, Vec2 velocity, Image texture = null)
         {
+            rand = new Random(023942);
             if (texture == null)
                 texture = Image.FromFile("textures/asteroid/asteroid_1.png");
             else
                 this.texture = texture;
+            this.texture = (Image)this.texture.Clone();
+            this.texture.RotateFlip((RotateFlipType)rand.Next(6));
             Location = spawn;
             Velocity = velocity;
         }
@@ -94,7 +99,7 @@ namespace Astroshooter
                     pointer.cooldown = 420;
                 }
             }
-            if (spaceObject is Ship)
+            if (spaceObject is Bullet)
             {
                 isDead = true;
             }

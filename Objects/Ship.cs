@@ -122,8 +122,12 @@ namespace Astroshooter
                     && this.Location.Y < objCords.Y + objSize.Height
                     && this.Location.Y + ShipTexture.Height > objCords.Y
                 )
+            {
+                if (spaceObject is Asteroid)
+                    isDead = true;
                 return true;
-            return false;
+            }
+                return false;
         }
 
         public Size GetSize() => ShipTexture.Size;
