@@ -51,6 +51,8 @@ namespace Astroshooter
             UpdateCooldown(dt);
         }
 
+        public void SetCooldown(double newcooldown) => cooldown = newcooldown;
+
         private void UpdateCooldown(double dt)
         {
             if(cooldown > 0)
@@ -72,6 +74,7 @@ namespace Astroshooter
             var objSize = spaceObject.GetSize();
             var objRad = objSize.Width / 2;
             var thisRad = texture.Size.Width / 2;
+            var dist = Vec2.GetDistanceBetween(GetCoordinates(), spaceObject.GetCoordinates());
             if (
                     this.Location.X < objCords.X + objSize.Width
                     && this.Location.X + texture.Width > objCords.X
@@ -87,7 +90,7 @@ namespace Astroshooter
             if (spaceObject is Asteroid && cooldown <= 0)
             {
                 var pointer = spaceObject as Asteroid;
-                
+                if(pointer.cooldown <= 0)
                 {
 
                     var newPointerVel = (pointer.Velocity * (pointer.mass - mass) + Velocity * 2 * mass) * (1 / (mass + pointer.mass));
@@ -95,11 +98,11 @@ namespace Astroshooter
 
                     pointer.Velocity = newPointerVel;
                     Velocity = newVel;
-                    cooldown = 420;
-                    pointer.cooldown = 420;
+                    cooldown = 100;
+                    pointer.cooldown = 100;
                 }
             }
-            if (spaceObject is Bullet)
+            if (spaceObject is Bullet && !spaceObject.IsDead())
             {
                 isDead = true;
             }

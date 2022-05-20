@@ -48,10 +48,12 @@ namespace Astroshooter
 
         public SpaceField(string[] args)
         {
+            
             InitializeComponent();
 
             //if (args.Contains("-debug"))
                 debugModeEnabled = true;
+            
 
             asteroidTextures = InitializeAsteroidImages();
             ship = new Ship(new Vec2(ClientSize.Width / 2 ,ClientSize.Height / 2));
@@ -64,6 +66,8 @@ namespace Astroshooter
             spaceObjects.Add(ship);
 
             controller = new Controller(ship, this, spaceObjects, asteroidTextures);
+
+            
 
 
             ShipTexture = ship.ShipTexture;
@@ -79,6 +83,10 @@ namespace Astroshooter
             InitializeTimer();
             if(debugModeEnabled)
                 InitializeLabels();
+            //Cursor.Hide();
+            this.TopMost = true;
+            this.FormBorderStyle = FormBorderStyle.None;
+            this.WindowState = FormWindowState.Maximized;
         }
 
         public void InitializeLabels()
@@ -196,6 +204,12 @@ namespace Astroshooter
                 debugCollisions = !debugCollisions;
             if (e.KeyCode == Keys.L)
                 controller.CreateRandomAsteroid();
+            if (e.KeyCode == Keys.E)
+                controller.Respawn();
+            if (e.KeyCode == Keys.Escape)
+                this.Dispose();
+            if (e.KeyCode == Keys.Pause)
+                timer.Enabled = !timer.Enabled;
 
         }
         protected override void OnKeyUp(KeyEventArgs e)
@@ -207,6 +221,20 @@ namespace Astroshooter
                 isWPressed = false;
             if (e.KeyCode == Keys.R)
                 isRPressed = false;
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            if (e.Button == MouseButtons.Left)
+                isSpacePressed = true;
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+            if (e.Button == MouseButtons.Left)
+                isSpacePressed = false;
         }
 
         void Invalidate(object sender, EventArgs e) {this.Invalidate();  }

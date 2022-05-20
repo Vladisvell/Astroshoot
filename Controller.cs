@@ -16,6 +16,9 @@ namespace Astroshooter
         private Random random = new Random((int)DateTime.Now.Ticks);
         private List<Image> asteroidTextureList;
         private Queue<SpaceObject> toSpawn = new Queue<SpaceObject>(100);
+        private bool isPaused;
+        private double circularParameter = 0;
+
 
         public Controller(Ship ship, SpaceField spacefield, List<SpaceObject> spaceObjects, List<Image> asteroidImages)
         {
@@ -29,10 +32,10 @@ namespace Astroshooter
         {
             var Location = obj.GetCoordinates();
 
-            if (Location.X < -32) obj.SetCurrentCoordinates(spacefield.Width, Location.Y);
-            if (Location.X > spacefield.Width + 32) obj.SetCurrentCoordinates(0, Location.Y);
-            if (Location.Y < -32) obj.SetCurrentCoordinates(ship.Location.X, spacefield.Height);
-            if (Location.Y > spacefield.Height + 32) obj.SetCurrentCoordinates(Location.X, -16);
+            if (Location.X < -64) obj.SetCurrentCoordinates(spacefield.Width, Location.Y);
+            if (Location.X > spacefield.Width + 64) obj.SetCurrentCoordinates(0, Location.Y);
+            if (Location.Y < -64) obj.SetCurrentCoordinates(ship.Location.X, spacefield.Height);
+            if (Location.Y > spacefield.Height + 64) obj.SetCurrentCoordinates(Location.X, -32);
         }
 
         void Collision(SpaceObject spaceobject)
@@ -117,13 +120,44 @@ namespace Astroshooter
 
         public void CreateRandomAsteroid()
         {
-            if(spaceObjects.Count <= 64 && toSpawn.Count <= 16)
-            {
-                Vec2 pos = GetRandomPositionOutsidePlayzone();
-                Vec2 vel = GetRandomVelocity();
-                toSpawn.Enqueue(new Asteroid(pos, vel, asteroidTextureList[random.Next(0, asteroidTextureList.Count - 1)]));
-            }
+            //if(spaceObjects.Count <= 32 && toSpawn.Count <= 16)
+            //{
+            //    Vec2 pos = GetRandomPositionOutsidePlayzone();
+            //    Vec2 vel = GetRandomVelocity();
+            //    var asteroid = new Asteroid(pos, vel * 3, asteroidTextureList[random.Next(0, asteroidTextureList.Count - 1)]);
+            //    asteroid.SetCooldown(2000);
+            //    toSpawn.Enqueue(asteroid);
+            //}
+            CreateAsteroidInCircle(2000);
             //return new Asteroid(pos, vel, asteroidTextureList[random.Next(0, asteroidTextureList.Count-1)]);
+        }
+
+        public void CreateAsteroidInCircle(double spawnRadius)
+        {
+            circularParameter %= Math.PI * 2;
+            if(spaceObjects.Count <= 32 && toSpawn.Count <= 16)
+            {
+                Vec2 pos = new Vec2()
+                {
+                    X = spawnRadius * Math.Cos(circularParameter) + spacefield.Width / 2,
+                    Y = spawnRadius * Math.Sin(circularParameter) + spacefield.Height / 2
+                };
+                circularParameter += Math.PI / 6;
+                Vec2 vel = GetRandomVelocity();
+                var asteroid = new Asteroid(pos, vel * 3, asteroidTextureList[random.Next(0, asteroidTextureList.Count - 1)]);
+                asteroid.SetCooldown(300);
+                toSpawn.Enqueue(asteroid);
+            }
+        }
+
+        public void Respawn()
+        {
+            if (ship.IsDead())
+            {
+                ship.SetDeadState(false);
+                ship.SetCurrentCoordinates(spacefield.Width / 2, spacefield.Height / 2);
+                spaceObjects.Add(ship);
+            }
         }
     }
 }

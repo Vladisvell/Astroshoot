@@ -33,6 +33,9 @@ namespace Astroshooter
             var objSize = spaceObject.GetSize();
             var objRad = objSize.Width / 2;
             var thisRad = texture.Size.Width / 2;
+
+            var dist = Vec2.GetDistanceBetween(GetCoordinates(), spaceObject.GetCoordinates());
+
             if (
                     this.location.X < objCords.X + objSize.Width
                     && this.location.X + texture.Width > objCords.X
@@ -47,7 +50,6 @@ namespace Astroshooter
                     isDead = true;
                     return true;
                 }
-                    
             }
                 return false;
         }
@@ -99,7 +101,7 @@ namespace Astroshooter
         {
             location = spawnloc * 1;
             this.velocity = velocity * 1;
-            acceleration = this.velocity * 0.05 + new Vec2(0.01, 0.01);
+            //acceleration = this.velocity * 0.05 + new Vec2(0.01, 0.01);
             if (image != null)
                 texture = image;
             timeToLive = 2000;

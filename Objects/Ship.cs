@@ -19,8 +19,13 @@ namespace Astroshooter
         private Vec2 acceleration = new Vec2();
         private double mass = 2;
         private double inertia = 0.001;
+        private double invulTime = 0;
         bool isDead;
         public double cooldown {get; private set;}
+
+        public void SetInvulTime(double time) => invulTime = time;
+
+        public void SetDeadState(bool state) => isDead = state;
 
         public void SetShootCooldown(double setted) => cooldown = setted;
 
@@ -72,6 +77,12 @@ namespace Astroshooter
             ResistanceForce.Y = -velocity.Y / 100;
         }
 
+        private void UpdateInvulTime(double dt)
+        {
+            if (invulTime > 0)
+                invulTime =- dt;
+        }
+
         public void SimulateTimeFrame(double dt)
         {
             UpdateAcceleration(dt);         
@@ -80,7 +91,7 @@ namespace Astroshooter
             UpdatePosition(dt);
             DeapplyForce();
             UpdateCooldown(dt);
-            
+            UpdateInvulTime(dt);
         }
 
         public void ApplyForce()
@@ -123,7 +134,7 @@ namespace Astroshooter
                     && this.Location.Y + ShipTexture.Height > objCords.Y
                 )
             {
-                if (spaceObject is Asteroid)
+                if (spaceObject is Asteroid && invulTime <= 0)
                     isDead = true;
                 return true;
             }
