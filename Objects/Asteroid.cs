@@ -102,7 +102,7 @@ namespace Astroshooter
                     pointer.cooldown = 100;
                 }
             }
-            if (spaceObject is Bullet && !spaceObject.IsDead())
+            if (spaceObject is Bullet)
             {
                 isDead = true;
             }

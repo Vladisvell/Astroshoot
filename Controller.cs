@@ -65,6 +65,8 @@ namespace Astroshooter
 
         private Queue<int> toDeleteQ = new Queue<int>(32);
 
+        private List<int> toDelete = new List<int>(512);
+
         void SimulateSpaceObjectsTimeFrame(double dt)
         {
             BoundaryCollisionHandle(ship);
@@ -77,21 +79,30 @@ namespace Astroshooter
                     BoundaryCollisionHandle(spaceObjects[i]);
                     Collision(spaceObjects[i]);
                     if (spaceObjects[i].IsDead())
-                        toDeleteQ.Enqueue(i);
+                        toDelete.Add(i);
                 //}
             }
 
-            while(toDeleteQ.Count != 0)
+            //while(toDeleteQ.Count != 0)
+            //{
+            //    var idToDelete = toDeleteQ.Dequeue();
+            //    if (idToDelete == spaceObjects.Count - 1)
+            //        spaceObjects.RemoveAt(spaceObjects.Count - 1);
+            //    else if(idToDelete < spaceObjects.Count - 1)
+            //    {
+            //        spaceObjects[idToDelete] = spaceObjects[spaceObjects.Count - 1];
+            //        spaceObjects.RemoveAt(spaceObjects.Count - 1);
+            //    }          
+            //}
+
+            for(int i = 0; i < toDelete.Count; i++)
             {
-                var idToDelete = toDeleteQ.Dequeue();
-                if (idToDelete == spaceObjects.Count - 1)
-                    spaceObjects.RemoveAt(spaceObjects.Count - 1);
-                else if(idToDelete < spaceObjects.Count - 1)
-                {
-                    spaceObjects[idToDelete] = spaceObjects[spaceObjects.Count - 1];
-                    spaceObjects.RemoveAt(spaceObjects.Count - 1);
-                }          
+                
+                spaceObjects[toDelete[i] - i] = spaceObjects[spaceObjects.Count - 1];
+                spaceObjects.RemoveAt(spaceObjects.Count - 1);
             }
+
+            toDelete.Clear();
 
             while (toSpawn.Count != 0)
                 spaceObjects.Add(toSpawn.Dequeue());

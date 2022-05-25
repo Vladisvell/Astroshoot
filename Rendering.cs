@@ -84,8 +84,8 @@ namespace Astroshooter
             if(debugModeEnabled)
                 InitializeLabels();
             //Cursor.Hide();
-            this.TopMost = true;
-            this.FormBorderStyle = FormBorderStyle.None;
+            //this.TopMost = true;
+            //this.FormBorderStyle = FormBorderStyle.None;
             this.WindowState = FormWindowState.Maximized;
         }
 
@@ -135,7 +135,7 @@ namespace Astroshooter
             string asteroidDirectoryPath = @".\textures\asteroid";
             string directory = Directory.GetCurrentDirectory();
             var files = Directory.EnumerateFiles(asteroidDirectoryPath, "*.png", SearchOption.AllDirectories);
-            var ech = files.ToList();
+            //var ech = files.ToList();
             var imageList = files.Select(x => Image.FromFile(x)).ToList();
             return imageList;
         }
@@ -202,8 +202,14 @@ namespace Astroshooter
                 isRPressed = true;
             if (e.KeyCode == Keys.T)
                 debugCollisions = !debugCollisions;
+            if (e.KeyCode == Keys.H)
+                debugModeEnabled = !debugModeEnabled;
             if (e.KeyCode == Keys.L)
                 controller.CreateRandomAsteroid();
+            if (e.KeyCode == Keys.O)
+                Cursor.Hide();
+            if (e.KeyCode == Keys.P)
+                Cursor.Show();
             if (e.KeyCode == Keys.E)
                 controller.Respawn();
             if (e.KeyCode == Keys.Escape)
@@ -258,6 +264,7 @@ namespace Astroshooter
                 g.DrawImage(ShipTexture, new Point(-ShipTexture.Width / 2, -ShipTexture.Height / 2));
                 e.Graphics.ResetTransform();
                 //e.Graphics.DrawImage(ShipTexture, (float)shipCords.X, (float)shipCords.Y);
+                if(debugModeEnabled)
                 e.Graphics.DrawLine(Pens.Red, new PointF((float)shipCords.X, (float)shipCords.Y), mousecords);
             }
             RenderAsteroids(e);
