@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows;
-using System.Timers;
 using System.Drawing.Drawing2D;
-using System.Windows.Input;
 using System.IO;
+
 
 
 namespace Astroshooter
@@ -33,11 +28,16 @@ namespace Astroshooter
         private bool isLPressed = false;
         private bool debugCollisions = false;
         private bool debugModeEnabled = false;
+        public bool isSoundEnabled { get; private set; } = true;
+
+        private bool isHelpEnabled = false;
 
         private Label velocity;
         private Label acceleration;
         private Label thrustforce;
         private Label direction;
+        private Label help;
+        private Label score;
 
         List<Image> asteroidTextures;
 
@@ -48,10 +48,10 @@ namespace Astroshooter
 
         public SpaceField(string[] args)
         {
-            
-            InitializeComponent();
+            this.WindowState = FormWindowState.Maximized;
 
-            //if (args.Contains("-debug"))
+
+            if (args.Contains("-debug"))
                 debugModeEnabled = true;
             
 
@@ -64,39 +64,100 @@ namespace Astroshooter
             spaceObjects = new List<SpaceObject>(512);
 
             spaceObjects.Add(ship);
-
             controller = new Controller(ship, this, spaceObjects, asteroidTextures);
 
-            
-
+            InitializeComponent();
+            InitializeControlHelp();
+            InitializeScore();
 
             ShipTexture = ship.ShipTexture;
+        }
+
+        public SpaceField()
+        {
+
         }
 
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+            
             Text = "Astroshooter";
             DoubleBuffered = true;
             
             BackColor = Color.Black;
             InitializeTimer();
             if(debugModeEnabled)
-                InitializeLabels();
+                InitializeDebugLabels();
             //Cursor.Hide();
             //this.TopMost = true;
             //this.FormBorderStyle = FormBorderStyle.None;
-            this.WindowState = FormWindowState.Maximized;
         }
 
-        public void InitializeLabels()
+        void InitializeControlHelp()
+        {
+            int X = 0;
+            int Y = this.Bottom / 2;
+            Font font = new Font("Arial", 12.0f,
+                        FontStyle.Bold);
+            this.help = new Label
+            {
+                Location = new Point(X, Y),
+                Size = new Size(180, 400),
+                Text = "Нажмите H чтобы показать помощь.",
+                ForeColor = Color.White,
+                BackColor = Color.Transparent,
+                Font = font,
+            };
+            Controls.Add(this.help);
+        }
+
+        void ToggleHelp()
+        {
+            isHelpEnabled = !isHelpEnabled;
+            if(isHelpEnabled)
+                help.Text = 
+                "Esc - выйти из игры. \n" +
+                "Пробел - стрелять. \n" +
+                "Мышь - наведение. \n" +
+                "W - двигаться вперед. \n" +
+                "J - переключить звук. \n" +
+                "Pause - переключить паузу. \n" +
+                "E - воскреснуть, и потерять очки. \n";
+            if (!isHelpEnabled)
+                help.Text = "Нажмите H чтобы показать помощь.";
+        }
+
+        void InitializeScore()
+        {
+            Font font = new Font("Arial", 21.0f,
+                        FontStyle.Bold);
+            score = new Label
+            {
+                Location = new Point(ClientSize.Width / 2, 30),
+                Size = new Size(300, 70),
+                ForeColor = Color.Gainsboro,
+                BackColor = Color.Transparent,
+                Font = font,
+                AutoSize = true,
+            };
+            Controls.Add(score);
+        }
+
+        public void UpdateScore(int newScore)
+        {
+            score.Text = newScore.ToString();
+        }
+
+        void InitializeDebugLabels()
         {
             velocity = new Label
             {
                 Location = new Point(0, 10),
                 Size = new Size(100, 15),
                 Text = "Velocity = ",
-                ForeColor = Color.White,     
+                ForeColor = Color.White,
+                BackColor = Color.Transparent
             };
             acceleration = new Label
             {
@@ -130,17 +191,16 @@ namespace Astroshooter
 
         }
 
-        public List<Image> InitializeAsteroidImages()
+        List<Image> InitializeAsteroidImages()
         {
             string asteroidDirectoryPath = @".\textures\asteroid";
             string directory = Directory.GetCurrentDirectory();
             var files = Directory.EnumerateFiles(asteroidDirectoryPath, "*.png", SearchOption.AllDirectories);
-            //var ech = files.ToList();
             var imageList = files.Select(x => Image.FromFile(x)).ToList();
             return imageList;
         }
 
-        public void InitializeTimer()
+        void InitializeTimer()
         {
             timer.Interval = 10;
             timer.Tick += (sender, args) => ship.SimulateTimeFrame(timer.Interval);
@@ -154,7 +214,7 @@ namespace Astroshooter
             timer.Tick += (sender, args) => controller.CreateRandomAsteroid();
         }
 
-        public void MovementDataTick()
+        void MovementDataTick()
         {
             var vel = ship.GetVelocity();
             var thrust = ship.GetThrustForce();
@@ -169,18 +229,11 @@ namespace Astroshooter
 
         }
 
-        public void InputTick()
+        void InputTick()
         {
             if (isSpacePressed && !ship.IsDead())
             {
-                if (ship.cooldown <= 0)
-                {
-                    var pelleteVelocity = new Vec2();
-                    pelleteVelocity.X = -Math.Cos(angle / 180 * Math.PI);
-                    pelleteVelocity.Y = -Math.Sin(angle / 180 * Math.PI);
-                    spaceObjects.Add(new Bullet(ship.GetCurrentCoordinates(), pelleteVelocity)); //пока это торпеда
-                    ship.SetShootCooldown(300);
-                }
+                controller.CreateBullet(angle);
             }
             if (isWPressed && !ship.IsDead())
                 ship.ApplyForce();
@@ -188,7 +241,6 @@ namespace Astroshooter
                 BackColor = Color.Black;
             if (isLPressed)
                 controller.CreateRandomAsteroid();
-
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -200,12 +252,17 @@ namespace Astroshooter
                 isWPressed = true;
             if (e.KeyCode == Keys.R)
                 isRPressed = true;
-            if (e.KeyCode == Keys.T)
-                debugCollisions = !debugCollisions;
-            if (e.KeyCode == Keys.H)
+            if (e.KeyCode == Keys.Oemtilde)
                 debugModeEnabled = !debugModeEnabled;
-            if (e.KeyCode == Keys.L)
-                controller.CreateRandomAsteroid();
+            if (e.KeyCode == Keys.H)
+                ToggleHelp();
+            if (debugModeEnabled)
+            {
+                if (e.KeyCode == Keys.T)
+                    debugCollisions = !debugCollisions;
+                if (e.KeyCode == Keys.L)
+                    controller.CreateRandomAsteroid();
+            }
             if (e.KeyCode == Keys.O)
                 Cursor.Hide();
             if (e.KeyCode == Keys.P)
@@ -216,6 +273,8 @@ namespace Astroshooter
                 this.Dispose();
             if (e.KeyCode == Keys.Pause)
                 timer.Enabled = !timer.Enabled;
+            if (e.KeyCode == Keys.J)
+                isSoundEnabled = !isSoundEnabled;
 
         }
         protected override void OnKeyUp(KeyEventArgs e)
@@ -249,9 +308,7 @@ namespace Astroshooter
         protected override void OnPaint(PaintEventArgs e)
         {
             shipCords = ship.GetCurrentCoordinates();
-            Graphics g = null;
-
-            g = e.Graphics;
+            Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             //рендер корабля
@@ -263,7 +320,6 @@ namespace Astroshooter
                 ship.ChangeDirection(angle);
                 g.DrawImage(ShipTexture, new Point(-ShipTexture.Width / 2, -ShipTexture.Height / 2));
                 e.Graphics.ResetTransform();
-                //e.Graphics.DrawImage(ShipTexture, (float)shipCords.X, (float)shipCords.Y);
                 if(debugModeEnabled)
                 e.Graphics.DrawLine(Pens.Red, new PointF((float)shipCords.X, (float)shipCords.Y), mousecords);
             }
@@ -277,7 +333,7 @@ namespace Astroshooter
             RotateImageAngle(e);
         }
 
-        public float RotateImageAngle(MouseEventArgs e)
+        float RotateImageAngle(MouseEventArgs e)
         {
             var y2 = e.Y;
             var y1 = shipCords.Y + ShipTexture.Height / 2;
@@ -307,6 +363,6 @@ namespace Astroshooter
                     }
                 }
             }
-        }   
+        }
     }
 }

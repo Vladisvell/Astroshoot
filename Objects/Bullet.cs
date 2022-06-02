@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Astroshooter 
 {
@@ -101,7 +97,6 @@ namespace Astroshooter
         {
             location = spawnloc * 1;
             this.velocity = velocity * 1;
-            //acceleration = this.velocity * 0.05 + new Vec2(0.01, 0.01);
             if (image != null)
                 texture = image;
             timeToLive = 2000;

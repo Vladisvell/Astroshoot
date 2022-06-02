@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Astroshooter
 {
@@ -115,5 +112,6 @@ namespace Astroshooter
         public Image GetImage() => texture;
 
         public bool IsDead() => isDead;
+
     }
 }
