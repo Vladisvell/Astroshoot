@@ -10,3 +10,4 @@ https://github.com/Vladisvell/Astroshoot/releases
 T - показать хитбоксы астероидов.
 L - призвать астероид в случайном месте вне экрана.
 ![изображение](https://user-images.githubusercontent.com/73733747/171625121-86347efe-eb66-45c4-9057-b6dc4bd1dcb9.png)
+Игра была создана с использованием библиотеки NAudio https://github.com/naudio/NAudio
