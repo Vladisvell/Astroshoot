@@ -101,7 +101,13 @@ namespace Astroshooter
             }
             if (spaceObject is Bullet)
             {
-                isDead = true;
+                isDead = true;      
+            }
+            if (spaceObject is Ship)
+            {
+                var pointer = spaceObject as Ship;
+                if (pointer.invulTime <= 0)
+                    pointer.SetDeadState(true);
             }
         }
 

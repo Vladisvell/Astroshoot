@@ -14,7 +14,7 @@ namespace Astroshooter
         private Vec2 acceleration = new Vec2();
         private double mass = 2;
         private double inertia = 0.001;
-        private double invulTime = 0;
+        public double invulTime { get; private set; } = 0;
         bool isDead;
         public double cooldown {get; private set;}
 

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.Reflection;
 
 
 
@@ -36,6 +37,7 @@ namespace Astroshooter
         private Label acceleration;
         private Label thrustforce;
         private Label direction;
+        private Label invultime;
         private Label help;
         private Label score;
 
@@ -69,6 +71,7 @@ namespace Astroshooter
             InitializeComponent();
             InitializeControlHelp();
             InitializeScore();
+            InitializeDebugLabels();
 
             ShipTexture = ship.ShipTexture;
         }
