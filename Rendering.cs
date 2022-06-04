@@ -37,7 +37,6 @@ namespace Astroshooter
         private Label acceleration;
         private Label thrustforce;
         private Label direction;
-        private Label invultime;
         private Label help;
         private Label score;
 
@@ -50,7 +49,7 @@ namespace Astroshooter
 
         public SpaceField(string[] args)
         {
-            this.WindowState = FormWindowState.Maximized;
+            this.WindowState = FormWindowState.Maximized;   
 
 
             if (args.Contains("-debug"))
@@ -72,6 +71,8 @@ namespace Astroshooter
             InitializeControlHelp();
             InitializeScore();
             InitializeDebugLabels();
+            HideDebugLabels();
+            
 
             ShipTexture = ship.ShipTexture;
         }
@@ -246,6 +247,22 @@ namespace Astroshooter
                 controller.CreateRandomAsteroid();
         }
 
+        void HideDebugLabels()
+        {
+            velocity.Hide();
+            acceleration.Hide();
+            thrustforce.Hide();
+            direction.Hide();
+        }
+
+        void ShowDebugLabels()
+        {
+            velocity.Show();
+            acceleration.Show();
+            thrustforce.Show();
+            direction.Show();
+        }
+
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
@@ -256,7 +273,14 @@ namespace Astroshooter
             if (e.KeyCode == Keys.R)
                 isRPressed = true;
             if (e.KeyCode == Keys.Oemtilde)
+            {
                 debugModeEnabled = !debugModeEnabled;
+                if (!debugModeEnabled)
+                    HideDebugLabels();
+                else
+                    ShowDebugLabels();
+            }
+                
             if (e.KeyCode == Keys.H)
                 ToggleHelp();
             if (debugModeEnabled)
